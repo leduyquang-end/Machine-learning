@@ -1,17 +1,11 @@
 """
 bai1_gradient_descent.py
 ========================
-BÀI 1: Tìm giá trị cực tiểu của hàm số f(x) = x² - 2
-bằng thuật toán Gradient Descent.
+BÀI 1: Tìm giá trị cực tiểu của f(x) = x² - 2 bằng Gradient Descent
 
-Công thức đạo hàm: (a·xⁿ)' = n·(a·xⁿ⁻¹)
-=> f'(x) = 2x
-
-Gradient Descent:
-  x_mới = x_cũ - learning_rate · f'(x_cũ)
-  Lặp đến khi |f'(x)| nhỏ hơn ngưỡng cho trước.
-
-Kết quả mong đợi: x* ≈ 0 (cực tiểu), f(x*) ≈ -2
+Phân tích (như trong sổ):
+  f(x)  = x² - 2
+  f'(x) = 2x = 0  ->  x = 0  (cực tiểu, f(0) = -2)
 """
 
 import numpy as np
@@ -20,99 +14,56 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 
-# ============================================================
-# HÀM SỐ VÀ ĐẠO HÀM
-# ============================================================
-def f(x):
-    """Hàm số f(x) = x² - 2"""
-    return x**2 - 2
+# Ham so f(x) = x^2 - 2
+def cost(x):
+    return x * x - 2
 
 
-def f_prime(x):
-    """Đạo hàm f'(x) = 2x"""
+# Dao ham f'(x) = 2x
+def grad(x):
     return 2 * x
 
 
-# ============================================================
-# GRADIENT DESCENT
-# ============================================================
-def gradient_descent(lr=0.1, x0=5.0, epochs=50, tol=1e-6):
-    """
-    Gradient Descent tìm cực tiểu f(x).
-
-    Parameters:
-    -----------
-    lr     : learning_rate (tốc độ học)
-    x0     : điểm khởi tạo
-    epochs : số lần lặp tối đa
-    tol    : ngưỡng dừng (khi |f'(x)| < tol)
-
-    Returns:
-    --------
-    history : danh sách các cặp (x, f(x)) qua từng bước
-    """
-    x = x0
-    history = [(x, f(x))]
-    print(f"{'Buoc':>5} {'x':>12} {'f(x)':>12} {'f_der':>12}")
-    print("-" * 45)
-
-    for i in range(epochs):
-        grad = f_prime(x)          # Tính đạo hàm (gradient)
-        x = x - lr * grad          # Cập nhật x: x = x - lr·f'(x)
-        history.append((x, f(x)))
-
-        print(f"{i+1:>5} {x:>12.6f} {f(x):>12.6f} {f_prime(x):>12.6f}")
-
-        # Dừng khi đạo hàm gần bằng 0 (đã tới cực tiểu)
-        if abs(f_prime(x)) < tol:
-            print(f"\n>> Dừng ở buoc {i+1}: |f'(x)| < {tol}")
+# Gradient Descent
+# x0: diem khoi tao, eta: learning rate
+def myGD(x0, eta):
+    x = [x0]
+    for it in range(100):
+        x_new = x[-1] - eta * grad(x[-1])   # Cap nhat: x = x - eta * f'(x)
+        if abs(grad(x_new)) < 1e-3:          # Dung khi f'(x) gan 0
             break
-
-    return history
+        x.append(x_new)
+    return x, it
 
 
 # ============================================================
-# VẼ HÌNH
+# CHAY CHINH
 # ============================================================
-def plot_result(history):
-    """Vẽ hàm số và các bước Gradient Descent"""
+if __name__ == "__main__":
+    # Chay Gradient Descent
+    x, it = myGD(x0=5.0, eta=0.1)
+
+    # In ket qua tung buoc
+    print("Buoc |       x |     f(x) |    f'(x)")
+    print("-" * 45)
+    for i, xi in enumerate(x):
+        print(f"{i:>4} | {xi:>7.4f} | {cost(xi):>8.4f} | {grad(xi):>8.4f}")
+
+    # Ket qua
+    print(f"\nKET QUA:")
+    print(f"  So buoc lap: {it}")
+    print(f"  x* = {x[-1]:.6f}  (ky vong: 0)")
+    print(f"  f(x*) = {cost(x[-1]):.6f}  (ky vong: -2)")
+
+    # Ve hinh
     xs = np.linspace(-6, 6, 200)
-
-    plt.figure(figsize=(9, 5))
-    plt.plot(xs, f(xs), 'b-', linewidth=2, label='f(x) = x² - 2')
-
-    # Vẽ các bước GD
-    hx = [h[0] for h in history]
-    hy = [h[1] for h in history]
-    plt.plot(hx, hy, 'ro-', markersize=6, label='Cac buoc Gradient Descent')
-
-    # Đánh dấu cực tiểu
-    plt.plot(0, -2, 'g*', markersize=20, label='Cuc tieu (0, -2)')
-
-    plt.xlabel('x', fontsize=12)
-    plt.ylabel('f(x)', fontsize=12)
-    plt.title('Bai 1: Gradient Descent tim cuc tieu f(x) = x² - 2', fontsize=13)
-    plt.legend(fontsize=10)
-    plt.grid(True, alpha=0.3)
+    plt.figure(figsize=(8, 5))
+    plt.plot(xs, cost(xs), 'b-', linewidth=2, label='f(x) = x² - 2')
+    plt.plot(x, [cost(xi) for xi in x], 'ro-', markersize=5, label='Cac buoc GD')
+    plt.plot(0, -2, 'g*', markersize=18, label='Cuc tieu (0, -2)')
+    plt.xlabel('x'); plt.ylabel('f(x)')
+    plt.title('Bai 1: Gradient Descent - f(x) = x² - 2')
+    plt.legend(); plt.grid(True, alpha=0.3)
     plt.tight_layout()
     plt.savefig('hinh_anh/bai1_gradient_descent.png', dpi=100)
     print("\n[OK] Da luu: hinh_anh/bai1_gradient_descent.png")
-
-
-# ============================================================
-# CHẠY CHÍNH
-# ============================================================
-if __name__ == "__main__":
-    print("=" * 50)
-    print("BÀI 1: f(x) = x² - 2  |  f'(x) = 2x")
-    print("=" * 50)
-
-    history = gradient_descent(lr=0.1, x0=5.0, epochs=50)
-
-    # Kết quả cuối
-    x_final, fx_final = history[-1]
-    print(f"\nKET QUA:")
-    print(f"  Gia tri cuc toi x* = {x_final:.6f}  (ky vong: 0)")
-    print(f"  f(x*) = {fx_final:.6f}            (ky vong: -2)")
-
-    plot_result(history)

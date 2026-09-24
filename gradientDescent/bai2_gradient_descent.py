@@ -1,16 +1,13 @@
 """
 bai2_gradient_descent.py
 ========================
-BÀI 2: Tìm giá trị cực tiểu của hàm số g(x) = (1/3)x³ - x
-bằng thuật toán Gradient Descent.
+BÀI 2: Tìm giá trị cực tiểu của g(x) = (1/3)x³ - x bằng Gradient Descent
 
-Công thức đạo hàm: (a·xⁿ)' = n·(a·xⁿ⁻¹)
-  g'(x) = 3·(1/3)·x² - 1·x⁰ = x² - 1
-
-Lưu ý: g(x) là hàm bậc 3, có 2 điểm critical (g'(x)=0):
-  x = 1  -> g(1)  = -2/3  (cực tiểu)
-  x = -1 -> g(-1) =  2/3  (cực đại)
-Gradient Descent sẽ tìm CỰC TIỂU (x = 1) nếu chọn điểm khởi tạo phù hợp.
+Phân tích (như trong sổ):
+  g(x)  = (1/3)x³ - x
+  g'(x) = 3·(1/3)·x² - 1 = x² - 1 = 0  ->  x = ±1
+  x = 1  -> g(1) = -2/3  (cuc tieu)
+  x = -1 -> g(-1) = 2/3  (cuc dai)
 """
 
 import numpy as np
@@ -19,99 +16,57 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 
-# ============================================================
-# HÀM SỐ VÀ ĐẠO HÀM
-# ============================================================
-def g(x):
-    """Hàm số g(x) = (1/3)x³ - x"""
+# Ham so g(x) = (1/3)x^3 - x
+def cost(x):
     return (1/3) * x**3 - x
 
 
-def g_prime(x):
-    """Đạo hàm g'(x) = x² - 1"""
-    return x**2 - 1
+# Dao ham g'(x) = x^2 - 1
+def grad(x):
+    return x * x - 1
 
 
-# ============================================================
-# GRADIENT DESCENT
-# ============================================================
-def gradient_descent(lr=0.05, x0=3.0, epochs=50, tol=1e-6):
-    """
-    Gradient Descent tìm cực tiểu g(x).
-
-    Parameters:
-    -----------
-    lr     : learning_rate
-    x0     : điểm khởi tạo (chon > 1 de tim cuc tieu tai x=1)
-    epochs : số lần lặp tối đa
-    tol    : ngưỡng dừng
-
-    Returns:
-    --------
-    history : danh sách (x, g(x)) qua từng bước
-    """
-    x = x0
-    history = [(x, g(x))]
-    print(f"{'Buoc':>5} {'x':>12} {'g(x)':>12} {'g_der':>12}")
-    print("-" * 45)
-
-    for i in range(epochs):
-        grad = g_prime(x)          # Tính đạo hàm
-        x = x - lr * grad          # Cập nhật x = x - lr·g'(x)
-        history.append((x, g(x)))
-
-        print(f"{i+1:>5} {x:>12.6f} {g(x):>12.6f} {g_prime(x):>12.6f}")
-
-        if abs(g_prime(x)) < tol:
-            print(f"\n>> Dừng ở buoc {i+1}: |g'(x)| < {tol}")
+# Gradient Descent
+# x0: diem khoi tao, eta: learning rate
+def myGD(x0, eta):
+    x = [x0]
+    for it in range(100):
+        x_new = x[-1] - eta * grad(x[-1])   # Cap nhat: x = x - eta * g'(x)
+        if abs(grad(x_new)) < 1e-3:          # Dung khi g'(x) gan 0
             break
-
-    return history
+        x.append(x_new)
+    return x, it
 
 
 # ============================================================
-# VẼ HÌNH
+# CHAY CHINH
 # ============================================================
-def plot_result(history):
-    """Vẽ hàm số và các bước Gradient Descent"""
+if __name__ == "__main__":
+    # Chay Gradient Descdescent (x0 = 3 > 1 de tim cuc tieu tai x = 1)
+    x, it = myGD(x0=3.0, eta=0.05)
+
+    # In ket qua tung buoc
+    print("Buoc |       x |     g(x) |    g'(x)")
+    print("-" * 45)
+    for i, xi in enumerate(x):
+        print(f"{i:>4} | {xi:>7.4f} | {cost(xi):>8.4f} | {grad(xi):>8.4f}")
+
+    # Ket qua
+    print(f"\nKET QUA:")
+    print(f"  So buoc lap: {it}")
+    print(f"  x* = {x[-1]:.6f}  (ky vong: 1)")
+    print(f"  g(x*) = {cost(x[-1]):.6f}  (ky vong: -0.6667 = -2/3)")
+
+    # Ve hinh
     xs = np.linspace(-3, 3, 300)
-
-    plt.figure(figsize=(9, 5))
-    plt.plot(xs, g(xs), 'b-', linewidth=2, label="g(x) = (1/3)x³ - x")
-
-    # Các bước GD
-    hx = [h[0] for h in history]
-    hy = [h[1] for h in history]
-    plt.plot(hx, hy, 'ro-', markersize=6, label='Cac buoc Gradient Descent')
-
-    # Đánh dấu các điểm critical
-    plt.plot(1, g(1), 'g*', markersize=20, label='Cuc tieu (1, -2/3)')
-    plt.plot(-1, g(-1), 'm*', markersize=20, label='Cuc dai (-1, 2/3)')
-
-    plt.xlabel('x', fontsize=12)
-    plt.ylabel('g(x)', fontsize=12)
-    plt.title("Bai 2: Gradient Descent tim cuc tieu g(x) = (1/3)x³ - x", fontsize=13)
-    plt.legend(fontsize=9)
-    plt.grid(True, alpha=0.3)
+    plt.figure(figsize=(8, 5))
+    plt.plot(xs, cost(xs), 'b-', linewidth=2, label='g(x) = (1/3)x³ - x')
+    plt.plot(x, [cost(xi) for xi in x], 'ro-', markersize=5, label='Cac buoc GD')
+    plt.plot(1, cost(1), 'g*', markersize=18, label='Cuc tieu (1, -2/3)')
+    plt.plot(-1, cost(-1), 'm*', markersize=18, label='Cuc dai (-1, 2/3)')
+    plt.xlabel('x'); plt.ylabel('g(x)')
+    plt.title('Bai 2: Gradient Descent - g(x) = (1/3)x³ - x')
+    plt.legend(); plt.grid(True, alpha=0.3)
     plt.tight_layout()
     plt.savefig('hinh_anh/bai2_gradient_descent.png', dpi=100)
     print("\n[OK] Da luu: hinh_anh/bai2_gradient_descent.png")
-
-
-# ============================================================
-# CHẠY CHÍNH
-# ============================================================
-if __name__ == "__main__":
-    print("=" * 50)
-    print("BÀI 2: g(x) = (1/3)x³ - x  |  g'(x) = x² - 1")
-    print("=" * 50)
-
-    history = gradient_descent(lr=0.05, x0=3.0, epochs=50)
-
-    # Kết quả cuối
-    x_final, gx_final = history[-1]
-    print(f"\nKET QUA:")
-    print(f"  Gia tri cuc toi x* = {x_final:.6f}  (ky vong: 1)")
-    print(f"  g(x*) = {gx_final:.6f}           (ky vong: -0.666667 = -2/3)")
-
-    plot_result(history)
